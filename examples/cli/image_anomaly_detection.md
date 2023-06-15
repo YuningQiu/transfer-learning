@@ -5,34 +5,55 @@
 The example below shows how the Intel Transfer Learning Tool CLI can be used for image anomaly detection transfer learning
 using your own dataset. It performs defect analysis with the MVTec dataset using PyTorch. The workflow uses a pretrained ResNet50 v1.5 model from torchvision.
 
-To use [MVTec](https://www.mvtec.com/company/research/datasets/mvtec-ad) or your own image dataset for anomaly detection, your image files (`.jpg` or `.png`) should be arranged in one of two ways.
+```bash
+# Create dataset and output directories
+DATASET_DIR=/tmp/data
+OUTPUT_DIR=/tmp/output
+mkdir -p ${DATASET_DIR}
+mkdir -p ${OUTPUT_DIR}
 
-Method 1: Category Folders
-Arrange them in folders in the root dataset directory like this:
 
-hazelnut
-  └── crack
-  └── cut
-  └── good
-  └── hole
-  └── print
-IMPORTANT: There must be a subfolder named good and at least one other folder of defective examples. It does not matter what the names of the other folders are or how many there, as long as there is at least one. This would also be an acceptable Method 1 layout:
 
-toothbrush
-  └── defective
-  └── good
-TLT will encode all of the non-good images as "bad" and use the "good" images in the training set and a mix of good and bad images in the validation set.
+## Transfer learning using a dataset from the TFDS catalog
 
-Method 2: Train & Test Folders with Category Subfolders
-Arrange them in folders in the root dataset directory like this:
+This example shows the Intel Transfer Learning Tool CLI being used for image classification transfer learning
+using the `tf_flowers` dataset from the
+[TensorFlow Datasets (TFDS) catalog](https://www.tensorflow.org/datasets/catalog/overview).
 
-hazelnut
-  └── train
-      └── good
-  └── test
-      └── crack
-      └── cut
-      └── good
-      └── hole
-      └── print
-When using this layout, TLT will use the exact defined split for train and validation subsets unless you use the shuffle_split method to re-shuffle and split up the "good" images with certain percentages
+```bash
+# Create dataset and output directories
+DATASET_DIR=/tmp/data
+OUTPUT_DIR=/tmp/output
+mkdir -p ${DATASET_DIR}
+mkdir -p ${OUTPUT_DIR}
+
+# Name of the dataset to use
+DATASET_NAME=hazelnut
+
+# Train resnet_v1_50 using the TFDS catalog dataset ResNet50 v1.5 model from torchvision
+tlt train \
+    -f tensorflow \
+    --model-name resnet_v1_50 \
+    --dataset-name ${DATASET_NAME} \
+    --dataset-dir ${DATASET_DIR} \
+    --output-dir ${OUTPUT_DIR} \
+    --epochs 2
+
+# Evaluate the model exported after training
+# Note that your --model-dir path may vary, since each training run creates a new directory
+tlt eval \
+    --model-dir ${OUTPUT_DIR}/resnet_v1_50/1 \
+    --dataset-name ${DATASET_NAME} \
+    --dataset-dir ${DATASET_DIR}
+```
+
+## Citations
+
+```
+@ONLINE {tfflowers,
+author = "The TensorFlow Team",
+title = "Flowers",
+month = "jan",
+year = "2019",
+url = "http://download.tensorflow.org/example_images/flower_photos.tgz" }
+```
