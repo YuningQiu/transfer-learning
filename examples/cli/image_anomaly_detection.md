@@ -36,7 +36,7 @@ tlt train \
 # Evaluate the model exported after training
 # Note that your --model-dir path may vary, since each training run creates a new directory
 tlt eval \
-    --model-dir ${OUTPUT_DIR}/resnet_v1_50/1 \
+    --model-dir ${OUTPUT_DIR}/resnet50/1 \
     --dataset-name ${DATASET_NAME} \
     --dataset-dir ${DATASET_DIR}
 ```
