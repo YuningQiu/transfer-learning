@@ -6,10 +6,13 @@ The example below shows how the Intel Transfer Learning Tool CLI can be used for
 using your own dataset. It performs defect analysis with the MVTec dataset using PyTorch. The workflow uses a pretrained ResNet50 v1.5 model from torchvision.
 
 
-## Transfer learning using a dataset from the TFDS catalog
+## Transfer learning using a dataset from catalog
 
 This example shows the Intel Transfer Learning Tool CLI being used for image anomaly detection transfer learning
 using the [MVTec](https://www.mvtec.com/company/research/datasets/mvtec-ad) dataset.
+
+### Download dataset
+[TBD] Download MVTec Anomaly Detection Dataset
 
 ```bash
 # Create dataset and output directories
