@@ -44,10 +44,10 @@ tlt eval \
 ## Citations
 
 ```
-@ONLINE {tfflowers,
-author = "The TensorFlow Team",
-title = "Flowers",
-month = "jan",
+@ONLINE {MVTec,
+author = "MVTec Software GmbH",
+title = "Hazelnut",
+month = "jun",
 year = "2019",
-url = "http://download.tensorflow.org/example_images/flower_photos.tgz" }
+url = "https://www.mvtec.com/company/research/datasets/mvtec-ad"}
 ```
