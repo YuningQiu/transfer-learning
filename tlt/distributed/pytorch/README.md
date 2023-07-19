@@ -2,23 +2,51 @@
 
 ## Multinode setup
 
+### Create and activate a Python3 virtual environment
+
+We encourage you to use a python virtual environment (virtualenv or conda) for consistent package management. Make sure to follow only the chosen method on all the nodes. Mixing those configurations is not supported. 
+
+There are two ways to do this:
+
+a. Using `virtualenv`:
+
 1. Login to one of the participating nodes.
 
-2. Create a new conda environment called `multi-node`
-```
-conda create -n multi-node python=3.8 --yes
+2. Create and activate a new python3 virtualenv
 
-conda activate multi-node
 ```
-
-3. Install dependencies from the shell script
-```
-sh run_install.sh
+virtualenv -p python3 tlt_dev_venv
+source tlt_dev_venv/bin/activate
 ```
 
-4. Install Intel® Transfer Learning Tool excluding framework dependencies (see main [README](/README.md))
+3. Install Intel® Transfer Learning Tool (see main [README](/README.md))
 ```
-EXCLUDE_FRAMEWORK=True pip install --editable .
+pip install --editable .
+```
+
+4. Install multinode dependencies from the shell script. You can also compile `torch_ccl` manually from [here](https://github.com/intel/torch-ccl)
+```
+bash tlt/distributed/pytorch/pyt_hvd_setup.sh
+```
+
+b. Or `conda`:
+
+1. Login to one of the participating nodes.
+
+2. Create and activate a new conda environment
+```
+conda create -n tlt_dev_venv python=3.8 --yes
+conda activate tlt_dev_venv
+```
+
+3. Install Intel® Transfer Learning Tool (see main [README](/README.md))
+```
+pip install --editable .
+```
+
+4. Install dependencies from the shell script
+```
+bash tlt/distributed/pytorch/run_install.sh
 ```
 
 ## Verify multinode setup
@@ -27,11 +55,15 @@ Create a `hostfile` with a list of IP addresses of the participating nodes and t
 ```
 mpiexec.hydra -ppn 1 -f hostfile hostname
 ```
+**Note:** If the above command errors out as `'mpiexec.hydra' command not found`, activate the oneAPI environment:
+```
+source /opt/intel/oneapi/setvars.sh
+```
 
 ## Launch a distributed training job with TLT CLI
 
 **Step 1:** Create a `hostfile` with a list of IP addresses of the participating nodes. Make sure 
-the first IP address to be of the current node. For testing, you can use the nodes present in this [hostfile](hostfile)
+the first IP address to be of the current node.
 
 **Step 2:** Launch a distributed training job with TLT CLI using the appropriate flags.
 ```
@@ -47,13 +79,24 @@ tlt train \
     --nproc_per_node 2
 ```
 
+**(Optional)**: Use the `--use_horovod` flag to use horovod for distributed training
+
 ## Troubleshooting
 
-- "Port already in use" - Might happen when you keyboard interrupt training.
+- ***"Port already in use"***
+    
+    Might happen when you keyboard interrupt training.
 
-**Fix:** Release the port from the terminal (or) log out and log in again to free the port.
+    **Fix:** Release the port from the terminal (or) log out and log in again to free the port.
 
-- "HTTP Connection error" - Might happen if there are several attempts to train text classification model
-as it uses Hugging Face API to make calls to get dataset, model, tokenizer.
+- ***"HTTP Connection error"***
 
-**Fix:** Wait for about few seconds and try again.
+    Might happen if there are several attempts to train text classification model as it uses Hugging Face API to make calls to get dataset, model, tokenizer.
+
+    **Fix:** Wait for about few seconds and try again.
+
+- ***"TimeoutException"*** when using horovod
+
+    Might happen when horovod times out waiting for tasks to start. 
+    
+    **Fix:** Check connectivity between servers. You may need to increase the `--hvd-start-timeout` parameter if you have too many servers. Default value for timeout is 30 seconds.

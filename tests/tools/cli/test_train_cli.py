@@ -87,7 +87,7 @@ def test_train_preprocess_with_image_size(mock_inspect, mock_load_dataset, mock_
 
 @pytest.mark.common
 @pytest.mark.parametrize('model_name,framework',
-                         [['small_bert/bert_en_uncased_L-10_H-128_A-2', FrameworkType.TENSORFLOW],
+                         [['google/bert_uncased_L-10_H-128_A-2', FrameworkType.TENSORFLOW],
                           ['bert_en_uncased_L-12_H-768_A-12', FrameworkType.PYTORCH]])
 @patch("tlt.models.model_factory.get_model")
 @patch("tlt.datasets.dataset_factory.load_dataset")
@@ -238,7 +238,8 @@ def test_train_init_checkpoints(mock_load_dataset, mock_get_model, model_name, f
             model_mock.train.assert_called_once_with(data_mock, output_dir=output_dir, epochs=2,
                                                      initial_checkpoints=init_checkpoints, early_stopping=False,
                                                      lr_decay=False, ipex_optimize=False, distributed=False,
-                                                     hostfile=None, nnodes=1, nproc_per_node=1)
+                                                     hostfile=None, nnodes=1, nproc_per_node=1, use_horovod=False,
+                                                     hvd_start_timeout=30)
         data_mock.preprocess.assert_called_once_with(batch_size=32)
 
         # Verify that the train command exit code is successful
@@ -279,10 +280,24 @@ def test_train_features(mock_inspect, mock_load_dataset, mock_get_model, model_n
         model_mock.export.return_value = output_dir
 
         # Call the train command
-        result = runner.invoke(train,
-                               ["--framework", str(framework), "--model-name", model_name, "--dataset_dir", dataset_dir,
-                                "--output-dir", output_dir, "--epochs", epochs, "--early_stopping", early_stopping,
-                                "--lr_decay", lr_decay])
+        if early_stopping and lr_decay:
+            result = runner.invoke(train,
+                                   ["--framework", str(framework), "--model-name", model_name, "--dataset_dir",
+                                    dataset_dir, "--output-dir", output_dir, "--epochs", epochs, "--early_stopping",
+                                    "--lr_decay"])
+        elif early_stopping:
+            result = runner.invoke(train,
+                                   ["--framework", str(framework), "--model-name", model_name, "--dataset_dir",
+                                    dataset_dir, "--output-dir", output_dir, "--epochs", epochs, "--early_stopping"])
+        elif lr_decay:
+            result = runner.invoke(train,
+                                   ["--framework", str(framework), "--model-name", model_name, "--dataset_dir",
+                                    dataset_dir, "--output-dir", output_dir, "--epochs", epochs, "--lr_decay"])
+
+        else:
+            result = runner.invoke(train,
+                                   ["--framework", str(framework), "--model-name", model_name, "--dataset_dir",
+                                    dataset_dir, "--output-dir", output_dir, "--epochs", epochs])
 
         # Verify that the expected calls were made
         mock_get_model.assert_called_once_with(model_name, str(framework))
@@ -300,7 +315,8 @@ def test_train_features(mock_inspect, mock_load_dataset, mock_get_model, model_n
             model_mock.train.assert_called_once_with(data_mock, output_dir=output_dir, epochs=15,
                                                      initial_checkpoints=None, early_stopping=early_stopping,
                                                      lr_decay=lr_decay, ipex_optimize=False, distributed=False,
-                                                     hostfile=None, nnodes=1, nproc_per_node=1)
+                                                     hostfile=None, nnodes=1, nproc_per_node=1, use_horovod=False,
+                                                     hvd_start_timeout=30)
 
         # Verify that the train command exit code is successful
         assert result.exit_code == 0

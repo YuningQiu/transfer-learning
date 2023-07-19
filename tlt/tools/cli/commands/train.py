@@ -85,10 +85,12 @@ from tlt.distributed import TLT_DISTRIBUTED_DIR
               help="Choice of data augmentation to be applied during training.")
 @click.option("--ipex_optimize", "--ipex-optimize",
               required=False,
+              type=click.BOOL,
               is_flag=True,
               help="Boolean option to optimize model with Intel Extension for PyTorch.")
 @click.option("--distributed", "-d",
               required=False,
+              type=click.BOOL,
               is_flag=True,
               help="Boolean option to trigger a distributed training job.")
 @click.option("--nnodes",
@@ -109,19 +111,28 @@ from tlt.distributed import TLT_DISTRIBUTED_DIR
 @click.option("--early-stopping", "--early_stopping",
               type=click.BOOL,
               default=False,
+              is_flag=True,
               help="Enable early stopping if convergence is reached while training (bool)")
 @click.option("--lr-decay", "--lr_decay",
               type=click.BOOL,
               default=False,
+              is_flag=True,
               help="If lr_decay is True and do_eval is True, learning rate decay on the validation loss is applied at "
               "the end of each epoch.")
 @click.option("--use-horovod", "--use_horovod",
               required=False,
+              type=click.BOOL,
               is_flag=True,
               help="Use horovod instead of default MPI")
+@click.option("--hvd-start-timeout", "--hvd_start_timeout",
+              type=click.IntRange(min=1),
+              default=30,
+              help="Horovodrun has to perform all the checks and start the processes before the specified timeout. "
+              "The default value is 30 seconds.  Alternatively, The environment variable HOROVOD_START_TIMEOUT can "
+              "also be used to specify the initialization timeout. Currently only supports PyTorch.")
 def train(framework, model_name, output_dir, dataset_dir, dataset_file, delimiter, class_names, dataset_name,
           dataset_catalog, epochs, init_checkpoints, add_aug, early_stopping, lr_decay, ipex_optimize, distributed,
-          nnodes, nproc_per_node, hostfile, use_horovod):
+          nnodes, nproc_per_node, hostfile, use_horovod, hvd_start_timeout):
     """
     Trains the model
     """
@@ -193,7 +204,6 @@ def train(framework, model_name, output_dir, dataset_dir, dataset_file, delimite
     try:
         model = model_factory.get_model(model_name, framework)
     except Exception as e:
-
         sys.exit("Error while getting the model (model name: {}, framework: {}):\n{}".format(
             model_name, framework, str(e)))
     # Get the dataset
@@ -236,7 +246,8 @@ def train(framework, model_name, output_dir, dataset_dir, dataset_file, delimite
         try:
             model.train(dataset, output_dir=output_dir, epochs=epochs, initial_checkpoints=init_checkpoints,
                         early_stopping=early_stopping, lr_decay=lr_decay, ipex_optimize=ipex_optimize,
-                        distributed=distributed, hostfile=hostfile, nnodes=nnodes, nproc_per_node=nproc_per_node)
+                        distributed=distributed, hostfile=hostfile, nnodes=nnodes, nproc_per_node=nproc_per_node,
+                        use_horovod=use_horovod, hvd_start_timeout=hvd_start_timeout)
         except Exception as e:
             sys.exit("There was an error during model training:\n{}".format(str(e)))
 
