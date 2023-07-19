@@ -12,8 +12,10 @@ This example shows the Intel Transfer Learning Tool CLI being used for image ano
 using the [MVTec](https://www.mvtec.com/company/research/datasets/mvtec-ad) dataset.
 
 ### Download dataset
-[TBD] Download MVTec Anomaly Detection Dataset
++ Download MVTec Anomaly Detection Dataset
+Follow instructions at [MVTec](https://www.mvtec.com/company/research/datasets/mvtec-ad) to obtain the example dataset.
 
+### Transfer learning
 ```bash
 # Create dataset and output directories
 DATASET_DIR=/tmp/data
